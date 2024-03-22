@@ -1,0 +1,52 @@
+from tkinter import *
+from tkinter import filedialog
+from Crypto.Cipher import DES3
+from hashlib import md5
+
+def encrypt_or_decrypt():
+    file1 = filedialog.askopenfile(mode="rb", filetype=[
+        ('jpg file', '.jpg'), ('png file', '.png'),
+        ('jpeg file', '.jpeg'), ('bitmap', '.BitmapImage')])
+    if file1 is not None:
+        file_path = file1.name
+        key = entry1.get(1.0, END)
+        tdes_key = DES3.adjust_key_parity(md5(key.encode('ascii')).digest())  # 16-byte key
+
+        cipher = DES3.new(tdes_key, DES3.MODE_EAX, nonce=b'e')  # Use EAX mode
+
+        with open(file_path, 'rb') as input_file:
+            file_bytes = input_file.read()
+
+            if selected_operation.get() == 'encrypt':
+                new_file_bytes = cipher.encrypt(file_bytes)
+            else:
+                new_file_bytes = cipher.decrypt(file_bytes)
+
+        with open(file_path, 'wb') as output_file:
+            output_file.write(new_file_bytes)
+
+root = Tk()
+root.geometry("800x600")
+
+# Add a label for selecting operation
+label_operation = Label(root, text="Select operation:")
+label_operation.place(x=10, y=10)
+
+# Create a radio button for encryption and decryption
+selected_operation = StringVar(root)
+selected_operation.set("encrypt")  # Set default operation
+radio_encrypt = Radiobutton(root, text="Encrypt", variable=selected_operation, value="encrypt")
+radio_encrypt.place(x=100, y=10)
+radio_decrypt = Radiobutton(root, text="Decrypt", variable=selected_operation, value="decrypt")
+radio_decrypt.place(x=180, y=10)
+
+button = Button(root, text="Encrypt/Decrypt", command=encrypt_or_decrypt)
+button.place(x=70, y=50)
+
+entry1 = Text(root, height=1, width=10)
+entry1.place(x=50, y=90)
+
+label_key = Label(root, text="Enter key:")
+label_key.place(x=10, y=90)
+
+root.mainloop()
